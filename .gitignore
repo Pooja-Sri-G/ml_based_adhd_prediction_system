@@ -4,3 +4,7 @@ __pycache__/
 .env
 *.pkl
 catboost_info/
+db.sqlite3
+*.h5
+*.joblib
+dataset/

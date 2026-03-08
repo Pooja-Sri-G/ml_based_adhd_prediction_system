@@ -7,7 +7,15 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.utils import resample
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    f1_score,
+    recall_score,
+    precision_score,
+    roc_auc_score,
+    confusion_matrix
+)
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -92,26 +100,79 @@ scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train_bal)
 X_test_scaled = scaler.transform(X_test)
 
-# Ensemble
+# ============================================================================
+# STEP 5: TRAIN BASE MODELS INDIVIDUALLY & PRINT THEIR METRICS
+# ============================================================================
+print("\n" + "="*65)
+print("         INDIVIDUAL MODEL METRICS (on test set)")
+print("="*65)
+print(f"  {'Model':<22} {'Accuracy':>9} {'Precision':>10} {'Recall':>8} {'F1':>7} {'ROC-AUC':>8}")
+print("-"*65)
+
+def print_metrics(name, model, X_tr, y_tr, X_te, y_te):
+    model.fit(X_tr, y_tr)
+    y_pred = model.predict(X_te)
+    acc  = accuracy_score(y_te, y_pred)
+    prec = precision_score(y_te, y_pred, zero_division=0)
+    rec  = recall_score(y_te, y_pred, zero_division=0)
+    f1   = f1_score(y_te, y_pred, zero_division=0)
+    try:
+        auc = roc_auc_score(y_te, model.predict_proba(X_te)[:, 1])
+    except:
+        auc = float('nan')
+    auc_str = f"{auc*100:.2f}%" if not np.isnan(auc) else "  N/A"
+    print(f"  {name:<22} {acc*100:>8.2f}%  {prec*100:>8.2f}%  {rec*100:>7.2f}%  {f1*100:>6.2f}%  {auc_str:>8}")
+    return model
+
 rf = RandomForestClassifier(n_estimators=1000, random_state=42, class_weight='balanced')
 gb = GradientBoostingClassifier(n_estimators=1000, learning_rate=0.01, max_depth=7, random_state=42)
 
-estimators = [('rf', rf), ('gb', gb)]
-if HAS_XGB: estimators.append(('xgb', XGBClassifier(n_estimators=1000, learning_rate=0.01, max_depth=8, colsample_bytree=0.7, random_state=42)))
-if HAS_CATBOOST: estimators.append(('cat', CatBoostClassifier(iterations=1000, learning_rate=0.01, depth=8, random_state=42, verbose=False)))
+rf = print_metrics("Random Forest",     rf, X_train_scaled, y_train_bal, X_test_scaled, y_test)
+gb = print_metrics("Gradient Boosting", gb, X_train_scaled, y_train_bal, X_test_scaled, y_test)
 
+estimators = [('rf', rf), ('gb', gb)]
+
+if HAS_XGB:
+    xgb = XGBClassifier(n_estimators=1000, learning_rate=0.01, max_depth=8, colsample_bytree=0.7, random_state=42)
+    xgb = print_metrics("XGBoost", xgb, X_train_scaled, y_train_bal, X_test_scaled, y_test)
+    estimators.append(('xgb', xgb))
+
+if HAS_CATBOOST:
+    cat = CatBoostClassifier(iterations=1000, learning_rate=0.01, depth=8, random_state=42, verbose=False)
+    cat = print_metrics("CatBoost", cat, X_train_scaled, y_train_bal, X_test_scaled, y_test)
+    estimators.append(('cat', cat))
+
+# ============================================================================
+# STEP 6: TRAIN STACKING ENSEMBLE & PRINT ITS METRICS
+# ============================================================================
+print("-"*65)
 stacking = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression(), cv=5)
 stacking.fit(X_train_scaled, y_train_bal)
 
-acc = accuracy_score(y_test, stacking.predict(X_test_scaled))
-print(f"\n[OK] Final Accuracy: {acc*100:.2f}%")
+y_pred_stack = stacking.predict(X_test_scaled)
+acc  = accuracy_score(y_test, y_pred_stack)
+prec = precision_score(y_test, y_pred_stack, zero_division=0)
+rec  = recall_score(y_test, y_pred_stack, zero_division=0)
+f1   = f1_score(y_test, y_pred_stack, zero_division=0)
+try:
+    auc = roc_auc_score(y_test, stacking.predict_proba(X_test_scaled)[:, 1])
+    auc_str = f"{auc*100:.2f}%"
+except:
+    auc_str = "  N/A"
+
+print(f"  {'★ Stacking Ensemble':<22} {acc*100:>8.2f}%  {prec*100:>8.2f}%  {rec*100:>7.2f}%  {f1*100:>6.2f}%  {auc_str:>8}")
+print("="*65)
+
+print(f"\n[OK] Final Stacking Accuracy: {acc*100:.2f}%")
+
+print("\nDetailed Classification Report (Stacking Ensemble):")
+print(classification_report(y_test, y_pred_stack, target_names=["No ADHD", "ADHD"]))
 
 # ============================================================================
-# STEP 8: SAVE
+# STEP 7: SAVE
 # ============================================================================
 joblib.dump(stacking, 'adhdModel.pkl')
 joblib.dump(scaler, 'scaler.pkl')
 joblib.dump(label_encoders, 'labelEncoders.pkl')
-joblib.dump(X.columns.tolist(), 'feature_names.pkl')
 
-print("\nDone Models updated.")
+print("\nDone. Models saved.")

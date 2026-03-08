@@ -179,9 +179,9 @@
       );
     }
 
-    // Modified to scale scores to 0-5 range
+    // to scale scores to 0-5 range
     function calculateScores() {
-      // Calculate raw InattentionScore (9 questions, 0-2 each => max 18)
+      // Calculate raw InattentionScore 
       let inattentionRaw = 0;
       for (let i = 1; i <= 9; i++) {
         const value = document.querySelector(`input[name="inattention_q${i}"]:checked`);
@@ -191,7 +191,7 @@
       let inattentionScaled = (inattentionRaw * 5 / 18).toFixed(2);
       document.getElementById('InattentionScore').value = inattentionScaled;
 
-      // Calculate raw HyperactivityScore (9 questions, 0-2 each => max 18)
+      // Calculate raw HyperactivityScore 
       let hyperactivityRaw = 0;
       for (let i = 1; i <= 9; i++) {
         const value = document.querySelector(`input[name="hyperactivity_q${i}"]:checked`);
@@ -200,8 +200,7 @@
       let hyperactivityScaled = (hyperactivityRaw * 5 / 18).toFixed(2);
       document.getElementById('HyperactivityScore').value = hyperactivityScaled;
 
-      // ImpulsivityScore is assumed already in 0-5 from game; keep as is
-      // No change to other hidden fields
+      // ImpulsivityScore is assumed already in 0-5 from game; 
     }
 
     // Section navigation and progress bar
@@ -288,8 +287,9 @@
     <div class="main-content">
       <div class="container fade-in">
         <header style="text-align: center; margin-bottom: 40px;">
-          <h1 class="title-gradient" style="font-size: 2.5rem; margin-bottom: 8px;">Comprehensive ADHD Assessment</h1>
-          <p style="color: var(--text-muted); font-weight: 500;">Detailed Behavioral & Cognitive Screening Tool</p>
+          <h1 class="title-gradient" style="font-size: 2.5rem; margin-bottom: 8px;">Machine Learning based ADHD
+            Prediction</h1>
+          <p style="color: var(--text-muted); font-weight: 500;">Behavioral & Cognitive Screening Tool</p>
 
         </header>
 
@@ -363,10 +363,6 @@
                   <label class="radio-option">
                     <input type="radio" name="Gender" value="Female">
                     <span class="radio-custom">Female</span>
-                  </label>
-                  <label class="radio-option">
-                    <input type="radio" name="Gender" value="Nonbinary">
-                    <span class="radio-custom">Non-binary</span>
                   </label>
                 </div>
               </div>
