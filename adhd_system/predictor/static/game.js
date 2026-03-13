@@ -38,16 +38,16 @@ function nextStimulus() {
     box.style.display = "none";
     clickable = false;
 
-    // Random delay between stimuli
     setTimeout(() => {
         if (!gameRunning) return;
 
-        // 70% chance of Green (Inattention test), 30% chance of Red (Impulsivity test)
+        // 70% green (attention test), 30% red (impulsivity test)
         currentColor = Math.random() < 0.7 ? "green" : "red";
 
-        // Use professional colors from CSS system or clean hex values
         box.style.backgroundColor = currentColor === "green" ? "#10b981" : "#ef4444";
-        box.style.boxShadow = `0 0 40px ${currentColor === "green" ? "rgba(16, 185, 129, 0.4)" : "rgba(239, 68, 68, 0.4)"}`;
+        box.style.boxShadow = `0 0 40px ${currentColor === "green"
+            ? "rgba(16, 185, 129, 0.4)"
+            : "rgba(239, 68, 68, 0.4)"}`;
 
         box.style.display = "block";
         stimulusStartTime = Date.now();
@@ -56,7 +56,7 @@ function nextStimulus() {
         if (currentColor === "green") totalGreen++;
         else totalRed++;
 
-        // Stimulus duration: 1 second
+        // Stimulus visible for 1 second
         setTimeout(() => {
             if (clickable && gameRunning) {
                 if (currentColor === "green") {
@@ -77,6 +77,7 @@ box.onclick = () => {
     box.style.display = "none";
 
     if (currentColor === "green") {
+        // Only log RT for correct Go responses
         reactionTimes.push(reactionTime);
     } else if (currentColor === "red") {
         clickedRed++;
@@ -85,43 +86,122 @@ box.onclick = () => {
     nextStimulus();
 };
 
+// ─────────────────────────────────────────────────────────────
+// REACTION TIME ANALYSIS
+// Research basis: ADHD is associated with slower mean RT AND
+// higher RT variability (SD). Variability is considered the
+// stronger cognitive marker. (Hervey et al., 2004;
+// Epstein et al., 2003)
+// ─────────────────────────────────────────────────────────────
+
 /**
- * Maps error rates to a 0-5 score for the prediction model
+ * Returns mean of an array. Returns null if empty.
  */
-const getScore = (rate) => {
-    if (rate <= 0.05) return 0;
-    if (rate <= 0.15) return 1;
-    if (rate <= 0.30) return 2;
-    if (rate <= 0.50) return 3;
-    if (rate <= 0.70) return 4;
-    return 5;
-};
+function mean(arr) {
+    if (arr.length === 0) return null;
+    return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+/**
+ * Returns standard deviation of an array. Returns null if < 2 values.
+ */
+function stdDev(arr) {
+    if (arr.length < 2) return null;
+    const m = mean(arr);
+    const variance = arr.reduce((sum, val) => sum + Math.pow(val - m, 2), 0) / arr.length;
+    return Math.sqrt(variance);
+}
+
+/**
+ * Scores inattention (0–5) using BOTH omission error rate AND reaction time.
+ *
+ * Omission errors  → missed green boxes      → pure attention failures
+ * Slow mean RT     → delayed responses        → sluggish attention engagement
+ * High RT variability (SD) → inconsistent RT → hallmark of ADHD attention dysregulation
+ *
+ * Each component contributes equally (weighted 1/3 each).
+ * Final score is rounded to nearest integer in 0–5 range.
+ */
+function getInattentionScore(omissionRate, meanRT, rtSD) {
+    // --- Component 1: Omission error rate (0–5) ---
+    let omissionScore;
+    if (omissionRate <= 0.05)       omissionScore = 0;
+    else if (omissionRate <= 0.15)  omissionScore = 1;
+    else if (omissionRate <= 0.30)  omissionScore = 2;
+    else if (omissionRate <= 0.50)  omissionScore = 3;
+    else if (omissionRate <= 0.70)  omissionScore = 4;
+    else                            omissionScore = 5;
+
+    // --- Component 2: Mean reaction time (0–5) ---
+    // Normal RT for healthy adults: ~250–400ms
+    // Slow RT (>600ms) is associated with inattention
+    let rtMeanScore = 0;
+    if (meanRT !== null) {
+        if (meanRT <= 300)       rtMeanScore = 0;
+        else if (meanRT <= 400)  rtMeanScore = 1;
+        else if (meanRT <= 500)  rtMeanScore = 2;
+        else if (meanRT <= 650)  rtMeanScore = 3;
+        else if (meanRT <= 800)  rtMeanScore = 4;
+        else                     rtMeanScore = 5;
+    }
+
+    // --- Component 3: RT variability / standard deviation (0–5) ---
+    // Low SD (~50–80ms) = consistent attention
+    // High SD (>200ms)  = highly variable, ADHD marker
+    let rtSDScore = 0;
+    if (rtSD !== null) {
+        if (rtSD <= 60)        rtSDScore = 0;
+        else if (rtSD <= 100)  rtSDScore = 1;
+        else if (rtSD <= 150)  rtSDScore = 2;
+        else if (rtSD <= 200)  rtSDScore = 3;
+        else if (rtSD <= 280)  rtSDScore = 4;
+        else                   rtSDScore = 5;
+    }
+
+    // Weighted average: variability weighted slightly higher as it's
+    // the stronger ADHD marker per Hervey et al. (2004)
+    const weighted = (omissionScore * 0.30) + (rtMeanScore * 0.30) + (rtSDScore * 0.40);
+    return Math.min(5, Math.round(weighted));
+}
+
+function getImpulsivityScore(commissionRate) {
+    if (commissionRate <= 0.05)       return 0;
+    else if (commissionRate <= 0.15)  return 1;
+    else if (commissionRate <= 0.30)  return 2;
+    else if (commissionRate <= 0.50)  return 3;
+    else if (commissionRate <= 0.70)  return 4;
+    else                              return 5;
+}
 
 function endGame() {
     gameRunning = false;
     box.style.display = "none";
 
-    const inattentionRate = totalGreen > 0 ? missedGreen / totalGreen : 0;
-    const impulsivityRate = totalRed > 0 ? clickedRed / totalRed : 0;
+    const omissionRate    = totalGreen > 0 ? missedGreen / totalGreen : 0;
+    const commissionRate  = totalRed   > 0 ? clickedRed  / totalRed   : 0;
 
-    const inScore = getScore(inattentionRate);
-    const imScore = getScore(impulsivityRate);
+    const meanRT = mean(reactionTimes);
+    const rtSD   = stdDev(reactionTimes);
 
-    // Update parent window if it exists
+    const inScore = getInattentionScore(omissionRate, meanRT, rtSD);
+    const imScore = getImpulsivityScore(commissionRate);
+
+    // Pass data back to parent form
     if (window.opener && !window.opener.closed) {
         try {
-            window.opener.document.getElementById("InattentionScore").value = inScore;
-            window.opener.document.getElementById("ImpulsivityScore").value = imScore;
-
-            // Detailed stats for report
-            window.opener.document.getElementById("total_trials").value = totalGreen + totalRed;
-            window.opener.document.getElementById("correct_go").value = totalGreen - missedGreen;
-            window.opener.document.getElementById("missed_go").value = missedGreen;
-            window.opener.document.getElementById("correct_inhibit").value = totalRed - clickedRed;
+            window.opener.document.getElementById("InattentionScore").value  = inScore;
+            window.opener.document.getElementById("ImpulsivityScore").value  = imScore;
+            window.opener.document.getElementById("total_trials").value      = totalGreen + totalRed;
+            window.opener.document.getElementById("correct_go").value        = totalGreen - missedGreen;
+            window.opener.document.getElementById("missed_go").value         = missedGreen;
+            window.opener.document.getElementById("correct_inhibit").value   = totalRed - clickedRed;
             window.opener.document.getElementById("commission_errors").value = clickedRed;
-            window.opener.document.getElementById("reaction_times").value = JSON.stringify(reactionTimes);
+            window.opener.document.getElementById("reaction_times").value    = JSON.stringify(reactionTimes);
 
-            // Visual feedback on parent window button
+            // Show completion status in parent
+            const statusDiv = window.opener.document.getElementById("game-completion-status");
+            if (statusDiv) statusDiv.style.display = "block";
+
             const parentBtn = window.opener.document.querySelector("button[onclick='openGame()']");
             if (parentBtn) {
                 parentBtn.innerText = "Assessment Complete ✓";
@@ -137,9 +217,8 @@ function endGame() {
     statusText.style.color = "#10b981";
 
     const summary = document.createElement("div");
-    summary.style.marginTop = "20px";
-    summary.style.color = "var(--text-muted)";
-    summary.innerHTML = `<p>Test finished successfully.</p><p style="margin-top:10px; font-size:0.8rem;">Data captured. Closing in 3 seconds...</p>`;
+    summary.style.cssText = "margin-top:20px; color:var(--text-muted); font-size:0.85rem;";
+    summary.innerHTML = `<p>Test finished successfully. Closing in 3 seconds...</p>`;
     box.parentNode.appendChild(summary);
 
     setTimeout(() => window.close(), 3000);
