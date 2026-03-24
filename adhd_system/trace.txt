@@ -1,0 +1,27 @@
+Traceback (most recent call last):
+  File "C:\1-MINI_PROJECT\adhd_code_github\adhd_prediction\adhd_system\test_report.py", line 14, in <module>
+    generate_adhd_report(sample_user, game_data, 1, 'Alex', time_game_data)
+  File "C:\1-MINI_PROJECT\adhd_code_github\adhd_prediction\adhd_system\predictor\generate_report.py", line 563, in generate_adhd_report
+    story.append(_chart_go_nogo(game_data))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\1-MINI_PROJECT\adhd_code_github\adhd_prediction\adhd_system\predictor\generate_report.py", line 134, in _chart_go_nogo
+    wedges, texts, autotexts = ax1.pie(
+                               ^^^^^^^^
+  File "C:\1-MINI_PROJECT\adhd_code_github\adhd_prediction\venv\Lib\site-packages\matplotlib\_api\deprecation.py", line 453, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\1-MINI_PROJECT\adhd_code_github\adhd_prediction\venv\Lib\site-packages\matplotlib\__init__.py", line 1524, in inner
+    return func(
+           ^^^^^
+  File "C:\1-MINI_PROJECT\adhd_code_github\adhd_prediction\venv\Lib\site-packages\matplotlib\axes\_axes.py", line 3412, in pie
+    w = mpatches.Wedge((x, y), radius, 360. * min(theta1, theta2),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\1-MINI_PROJECT\adhd_code_github\adhd_prediction\venv\Lib\site-packages\matplotlib\patches.py", line 1252, in __init__
+    self._recompute_path()
+  File "C:\1-MINI_PROJECT\adhd_code_github\adhd_prediction\venv\Lib\site-packages\matplotlib\patches.py", line 1264, in _recompute_path
+    arc = Path.arc(theta1, theta2)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\1-MINI_PROJECT\adhd_code_github\adhd_prediction\venv\Lib\site-packages\matplotlib\path.py", line 1002, in arc
+    n = int(2 ** np.ceil((eta2 - eta1) / halfpi))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: cannot convert float NaN to integer

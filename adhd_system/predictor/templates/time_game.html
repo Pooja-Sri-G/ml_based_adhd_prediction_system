@@ -1,0 +1,297 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time Perception Test | Clinical Assessment</title>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .game-wrapper {
+      width: 100%;
+      max-width: 520px;
+      text-align: center;
+    }
+
+    .instructions {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin: 20px 0;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+      text-align: left;
+      line-height: 1.8;
+    }
+
+    .instructions p {
+      margin-bottom: 6px;
+    }
+
+    /* ── Round display ── */
+    .round-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 18px 0 10px;
+    }
+
+    .round-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid var(--card-border);
+      transition: all 0.3s ease;
+    }
+
+    .round-dot.done {
+      background: #22c55e;
+      border-color: #22c55e;
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+    }
+
+    .round-dot.active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+      transform: scale(1.3);
+    }
+
+    /* ── Target display ── */
+    .target-display {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+      border: 1px solid rgba(102, 126, 234, 0.3);
+      border-radius: 20px;
+      padding: 28px 20px;
+      margin: 20px 0;
+      display: none;
+    }
+
+    .target-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+
+    .target-seconds {
+      font-size: 3.5rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1;
+    }
+
+    .target-unit {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── Hold button ── */
+    .hold-btn-wrapper {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      margin: 20px 0;
+    }
+
+    .hold-instruction {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    #holdBtn {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      border: 3px solid rgba(59, 130, 246, 0.4);
+      background: rgba(59, 130, 246, 0.08);
+      color: var(--text-main);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+      position: relative;
+      outline: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #holdBtn:active,
+    #holdBtn.holding {
+      background: rgba(59, 130, 246, 0.25);
+      border-color: #3b82f6;
+      box-shadow: 0 0 30px rgba(59, 130, 246, 0.4), 0 0 60px rgba(59, 130, 246, 0.15);
+      transform: scale(0.97);
+    }
+
+    /* Pulse ring when holding */
+    #holdBtn.holding::before {
+      content: '';
+      position: absolute;
+      inset: -10px;
+      border-radius: 50%;
+      border: 2px solid rgba(59, 130, 246, 0.3);
+      animation: pulseRing 1s ease-out infinite;
+    }
+
+    @keyframes pulseRing {
+      0%   { transform: scale(1);   opacity: 1; }
+      100% { transform: scale(1.2); opacity: 0; }
+    }
+
+    /* ── Feedback card ── */
+    .feedback-card {
+      display: none;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin: 16px 0;
+      text-align: center;
+    }
+
+    .feedback-card.too-early {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .feedback-card.too-late {
+      background: rgba(249, 115, 22, 0.1);
+      border: 1px solid rgba(249, 115, 22, 0.3);
+    }
+
+    .feedback-card.good {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .feedback-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .feedback-detail {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Status text ── */
+    #status {
+      font-size: 1rem;
+      color: var(--text-muted);
+      min-height: 24px;
+      margin: 8px 0;
+    }
+
+    /* ── Timer visual (shown while memorizing) ── */
+    .memorize-bar-wrapper {
+      display: none;
+      margin: 16px 0;
+    }
+
+    .memorize-bar-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .memorize-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 10px;
+      transition: width 0.05s linear;
+    }
+
+    .memorize-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-align: left;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="game-wrapper fade-in">
+    <div class="glass-card">
+      <h2 class="title-gradient">Time Perception Test</h2>
+      <p id="status" class="game-status">Ready to begin?</p>
+
+      <!-- Instructions -->
+      <div class="instructions" id="instructions">
+        <p>• A target duration (e.g. <strong style="color:#818cf8">3 seconds</strong>) will appear.</p>
+        <p>• Watch the countdown — memorize how long it feels.</p>
+        <p>• Then <strong style="color:#3b82f6">press and hold</strong> the button for exactly that long.</p>
+        <p>• Release when you think the time is up.</p>
+        <p style="margin-top:12px; font-size:0.85rem; color:rgba(148,163,184,0.7);">
+          5 rounds total &nbsp;·&nbsp; No cheating with a clock! 😄
+        </p>
+      </div>
+
+      <!-- Round dots -->
+      <div class="round-indicator" id="roundDots" style="display:none;">
+        <div class="round-dot" id="dot0"></div>
+        <div class="round-dot" id="dot1"></div>
+        <div class="round-dot" id="dot2"></div>
+        <div class="round-dot" id="dot3"></div>
+        <div class="round-dot" id="dot4"></div>
+      </div>
+
+      <!-- Target display -->
+      <div class="target-display" id="targetDisplay">
+        <div class="target-label">Hold for exactly</div>
+        <div class="target-seconds" id="targetSeconds">3</div>
+        <div class="target-unit">seconds</div>
+      </div>
+
+      <!-- Memorize countdown bar -->
+      <div class="memorize-bar-wrapper" id="memorizeBar">
+        <div class="memorize-label">Memorizing duration...</div>
+        <div class="memorize-bar-track">
+          <div class="memorize-bar-fill" id="memorizeBarFill"></div>
+        </div>
+      </div>
+
+      <!-- Hold button -->
+      <div class="hold-btn-wrapper" id="holdWrapper">
+        <div class="hold-instruction">Press and hold for the target duration</div>
+        <button id="holdBtn">Hold</button>
+      </div>
+
+      <!-- Feedback -->
+      <div class="feedback-card" id="feedbackCard">
+        <div class="feedback-title" id="feedbackTitle"></div>
+        <div class="feedback-detail" id="feedbackDetail"></div>
+      </div>
+
+      <!-- Start button -->
+      <button id="startBtn" class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="startGame()">
+        Start Test
+      </button>
+    </div>
+  </div>
+
+  <script src="{% static 'time_game.js' %}"></script>
+</body>
+
+</html>

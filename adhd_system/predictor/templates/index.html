@@ -167,40 +167,115 @@
     }
   </style>
   <script>
+    // Opens Go/No-Go game popup
     function openGame() {
       const width = 600;
       const height = 700;
       const left = (window.screen.width / 2) - (width / 2);
       const top = (window.screen.height / 2) - (height / 2);
-      window.open(
+      const gameWindow = window.open(
         "/game/",
         "gameWindow",
         `width=${width},height=${height},left=${left},top=${top},menubar=no,status=no`
       );
+      if (!gameWindow) {
+        alert("Popup blocked! Please allow popups for this site and try again, or complete the assessment with questionnaires only.");
+      }
     }
 
-    // to scale scores to 0-5 range
+    // Opens Time Perception game popup
+    function openTimeGame() {
+      const width = 560;
+      const height = 700;
+      const left = (window.screen.width / 2) - (width / 2);
+      const top = (window.screen.height / 2) - (height / 2);
+      const gameWindow = window.open(
+        "/time-game/",
+        "timeGameWindow",
+        `width=${width},height=${height},left=${left},top=${top},menubar=no,status=no`
+      );
+      if (!gameWindow) {
+        alert("Popup blocked! Please allow popups for this site and try again, or complete the assessment with questionnaires only.");
+      }
+    }
+
+    // Called on form submit
+    // InattentionScore  → from questionnaire (game overwrites it if played)
+    // HyperactivityScore → from time game (falls back to questionnaire if game skipped)
+    // ImpulsivityScore  → from go/no-go game (stays 0 if game skipped)
+function validateAllSections() {
+      const requiredFields = [
+        'full_name', 'age', 'Gender', 'EducationStage',
+        'inattention_q1', 'hyperactivity_q1',
+        'DayDreaming', 'RSD',
+        'SleepHours', 'ScreenTime',
+        'ComorbidAnxiety', 'ComorbidDepression', 'FamilyHistoryADHD',
+        'SchoolSupport', 'Medication', 'AcademicScore'
+      ];
+
+      for (let field of requiredFields) {
+        const element = document.querySelector(`[name="${field}"]`);
+        if (!element) {
+          console.warn(`Field not found: ${field}`);
+          continue;
+        }
+        
+        if (element.type === 'radio' || element.type === 'checkbox') {
+          const checked = document.querySelector(`input[name="${field}"]:checked`);
+          if (!checked) {
+            alert(`Please answer all questions. Missing: ${field}`);
+            return false;
+          }
+        } else {
+          if (!element.value || element.value.trim() === '') {
+            element.focus();
+            alert(`Please fill in all required fields: ${field}`);
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
     function calculateScores() {
-      // Calculate raw InattentionScore 
-      let inattentionRaw = 0;
-      for (let i = 1; i <= 9; i++) {
-        const value = document.querySelector(`input[name="inattention_q${i}"]:checked`);
-        if (value) inattentionRaw += parseInt(value.value);
-      }
-      // Scale to 0-5: raw * 5/18
-      let inattentionScaled = (inattentionRaw * 5 / 18).toFixed(2);
-      document.getElementById('InattentionScore').value = inattentionScaled;
+      try {
+        // Validate all sections first
+        if (!validateAllSections()) {
+          return false;  // prevent form submission
+        }
 
-      // Calculate raw HyperactivityScore 
-      let hyperactivityRaw = 0;
-      for (let i = 1; i <= 9; i++) {
-        const value = document.querySelector(`input[name="hyperactivity_q${i}"]:checked`);
-        if (value) hyperactivityRaw += parseInt(value.value);
-      }
-      let hyperactivityScaled = (hyperactivityRaw * 5 / 18).toFixed(2);
-      document.getElementById('HyperactivityScore').value = hyperactivityScaled;
+        // InattentionScore — only set from questionnaire if game didn't play
+        const inattEl = document.getElementById('InattentionScore');
+        const existingInatt = parseFloat(inattEl.value) || 0;
+        if (existingInatt === 0) {
+          let raw = 0;
+          for (let i = 1; i <= 9; i++) {
+            const val = document.querySelector(`input[name="inattention_q${i}"]:checked`);
+            if (val) raw += parseInt(val.value);
+          }
+          inattEl.value = (raw * 5 / 18).toFixed(2);
+        }
 
-      // ImpulsivityScore is assumed already in 0-5 from game; 
+        // HyperactivityScore — only set from questionnaire if time game didn't play
+        const hyperEl = document.getElementById('HyperactivityScore');
+        const existingHyper = parseFloat(hyperEl.value) || 0;
+        if (existingHyper === 0) {
+          let raw = 0;
+          for (let i = 1; i <= 9; i++) {
+            const val = document.querySelector(`input[name="hyperactivity_q${i}"]:checked`);
+            if (val) raw += parseInt(val.value);
+          }
+          hyperEl.value = (raw * 5 / 18).toFixed(2);
+        }
+
+        // ImpulsivityScore — from game only, no fallback needed
+        return true;  // allow form to submit
+
+      } catch (e) {
+        console.error('calculateScores error:', e);
+        alert('An error occurred while processing your assessment. Please try again.');
+        return false;
+      }
     }
 
     // Section navigation and progress bar
@@ -214,28 +289,22 @@
       const totalSections = sections.length;
 
       function updateDisplay() {
-        // Show active section
         sections.forEach((sec, idx) => {
           sec.classList.toggle('active', idx === currentSection);
         });
 
-        // Update sidebar active class
         navLinks.forEach((link, idx) => {
           link.classList.toggle('active', idx === currentSection);
         });
 
-        // Update buttons
         backBtn.disabled = currentSection === 0;
         nextBtn.disabled = currentSection === totalSections - 1;
 
-        // Update progress bar (completed = currentSection index, since first is 0 but we show progress based on completed sections)
-        // For bar width: (currentSection+1)/totalSections * 100%
         const percent = ((currentSection + 1) / totalSections * 100).toFixed(0);
         progressBar.style.width = percent + '%';
         progressBar.textContent = percent + '%';
       }
 
-      // Click on sidebar links
       navLinks.forEach((link, idx) => {
         link.addEventListener('click', (e) => {
           e.preventDefault();
@@ -244,26 +313,61 @@
         });
       });
 
-      // Next button
       nextBtn.addEventListener('click', () => {
+        // Validate current section before moving
+        const currentInputs = sections[currentSection].querySelectorAll('input[required], select[required], textarea[required]');
+        let allValid = true;
+        for (let input of currentInputs) {
+          if (!input.checkValidity()) {
+            input.reportValidity();
+            allValid = false;
+            break;
+          }
+        }
+        if (!allValid) return;
+
         if (currentSection < totalSections - 1) {
           currentSection++;
           updateDisplay();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       });
 
-      // Back button
       backBtn.addEventListener('click', () => {
         if (currentSection > 0) {
           currentSection--;
           updateDisplay();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       });
 
-      // Initial display
+      // Jump to invalid section if submit is clicked and there's a missing field
+      const submitBtn = document.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.addEventListener('click', () => {
+          const form = document.querySelector('.assessment-form');
+          if (form && !form.checkValidity()) {
+            const firstInvalid = form.querySelector(':invalid');
+            if (firstInvalid) {
+              const section = firstInvalid.closest('.section');
+              if (section) {
+                const sectionsArray = Array.from(sections);
+                const index = sectionsArray.indexOf(section);
+                if (index !== -1 && index !== currentSection) {
+                  currentSection = index;
+                  updateDisplay();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }
+            }
+          }
+        });
+      }
+
       updateDisplay();
     });
   </script>
+
 </head>
 
 <body>
@@ -305,7 +409,11 @@
             not
             replace professional evaluation by a qualified healthcare provider. This assessment takes approximately
             15-20
-            minutes to complete.
+            minutes to complete. The symptoms in adulthood have to have been present for at least 6 months. The symptoms
+            in childhood
+            relate to the age of 5-12 years. For a symptom to be ascribed to ADHD it should have a chronic trait-like
+            course and
+            should not be episodic.
           </div>
           <!-- {% url 'predict' %} -->
           <form method="POST" action="" class="assessment-form" onsubmit="calculateScores()">
@@ -816,55 +924,91 @@
               </div>
             </div> <!-- end section7 -->
 
-            <!-- ========== SECTION 8: COGNITIVE ASSESSMENT GAME + SUBMIT ========== -->
             <div class="section" id="section8">
               <div class="question-group"
                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 12px; margin-bottom: 30px; margin-top: 40px;">
                 <h2 style="color: white; margin: 0; font-size: 1.5rem;">Section 8: Interactive Cognitive Assessment</h2>
-                <p style="color: white; margin-top: 8px; font-size: 0.9rem;">Go/No-Go Task - Measures attention and
-                  impulse control</p>
+                <p style="color: white; margin-top: 8px; font-size: 0.9rem;">Two clinically-backed games measuring
+                  attention, impulsivity & time perception</p>
               </div>
 
+              <!-- GAME 1: Go/No-Go -->
               <div class="question-group"
-                style="background: rgba(79, 70, 229, 0.1); border-radius: 16px; padding: 24px; border: 2px solid rgba(79, 70, 229, 0.3);">
-                <p class="question-text" style="margin-bottom: 8px;">Complete the Cognitive Performance Test</p>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
-                  This computerized test measures your attention span and impulse control through a reaction-time game.
-                  The test takes approximately 3-5 minutes to complete and provides objective measurements of:
+                style="background: rgba(79, 70, 229, 0.08); border-radius: 16px; padding: 24px; border: 2px solid rgba(79, 70, 229, 0.25); margin-bottom: 20px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                  <div
+                    style="background: linear-gradient(135deg,#667eea,#764ba2); border-radius:10px; padding:8px 14px; font-size:0.8rem; color:white; font-weight:600; white-space:nowrap;">
+                    Game 1
+                  </div>
+                  <p class="question-text" style="margin:0;">Go / No-Go Reaction Test</p>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+                  Measures <strong style="color:#818cf8">inattention</strong> (missed targets) and
+                  <strong style="color:#c084fc">impulsivity</strong> (false responses) using reaction time analysis.
                 </p>
-                <ul style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; padding-left: 20px;">
-                  <li>Sustained attention (ability to maintain focus)</li>
-                  <li>Impulsivity (tendency to respond without thinking)</li>
-                  <li>Response time variability</li>
-                  <li>Inhibitory control</li>
+                <ul
+                  style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 18px; padding-left: 20px; line-height:1.9;">
+                  <li>Click GREEN box · Ignore RED box · ~30 seconds</li>
+                  <li>Omission errors → inattention score</li>
+                  <li>Commission errors + RT variability → impulsivity score</li>
                 </ul>
                 <button type="button" class="btn btn-outline" onclick="openGame()" style="width: 100%;">
-                  Launch Cognitive Test
+                  Launch Go / No-Go Test
                 </button>
-
-                <!-- Hidden fields for game scores -->
-                <input type="hidden" name="InattentionScore" id="InattentionScore" value="0">
-                <input type="hidden" name="HyperactivityScore" id="HyperactivityScore" value="0">
-                <input type="hidden" name="ImpulsivityScore" id="ImpulsivityScore" value="0">
-                <input type="hidden" name="total_trials" id="total_trials" value="0">
-                <input type="hidden" name="correct_go" id="correct_go" value="0">
-                <input type="hidden" name="missed_go" id="missed_go" value="0">
-                <input type="hidden" name="correct_inhibit" id="correct_inhibit" value="0">
-                <input type="hidden" name="commission_errors" id="commission_errors" value="0">
-                <input type="hidden" name="reaction_times" id="reaction_times" value="[]">
-
                 <div id="game-completion-status"
-                  style="margin-top: 16px; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: 8px; display: none;">
-                  <p style="color: #16a34a; font-weight: 600; margin: 0;">Cognitive test completed successfully!</p>
+                  style="margin-top: 14px; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: 8px; border: 1px solid rgba(34,197,94,0.25); display: none;">
+                  <p style="color: #16a34a; font-weight: 600; margin: 0;">✓ Go/No-Go test completed!</p>
                 </div>
               </div>
 
-              <!-- Progress indicator (kept original) -->
+              <!-- GAME 2: Time Estimation -->
+              <div class="question-group"
+                style="background: rgba(16, 185, 129, 0.06); border-radius: 16px; padding: 24px; border: 2px solid rgba(16, 185, 129, 0.2); margin-bottom: 20px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                  <div
+                    style="background: linear-gradient(135deg,#10b981,#059669); border-radius:10px; padding:8px 14px; font-size:0.8rem; color:white; font-weight:600; white-space:nowrap;">
+                    Game 2
+                  </div>
+                  <p class="question-text" style="margin:0;">Time Perception Test</p>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+                  Measures <strong style="color:#34d399">hyperactivity</strong> through temporal estimation errors.
+                  ADHD individuals consistently underestimate time due to impaired internal timing.
+                </p>
+                <ul
+                  style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 18px; padding-left: 20px; line-height:1.9;">
+                  <li>Watch a target duration · Then replicate it by holding a button</li>
+                  <li>5 rounds with varying durations · ~2 minutes</li>
+                  <li>Deviation from target → hyperactivity score</li>
+                </ul>
+                <button type="button" class="btn btn-outline" onclick="openTimeGame()"
+                  style="width: 100%; border-color: #10b981; color: #10b981;">
+                  Launch Time Perception Test
+                </button>
+                <div id="time-game-completion-status"
+                  style="margin-top: 14px; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: 8px; border: 1px solid rgba(34,197,94,0.25); display: none;">
+                  <p style="color: #16a34a; font-weight: 600; margin: 0;">✓ Time perception test completed!</p>
+                </div>
+              </div>
+
+              <!-- Hidden fields -->
+              <input type="hidden" name="InattentionScore" id="InattentionScore" value="0">
+              <input type="hidden" name="HyperactivityScore" id="HyperactivityScore" value="0">
+              <input type="hidden" name="ImpulsivityScore" id="ImpulsivityScore" value="0">
+              <input type="hidden" name="total_trials" id="total_trials" value="0">
+              <input type="hidden" name="correct_go" id="correct_go" value="0">
+              <input type="hidden" name="missed_go" id="missed_go" value="0">
+              <input type="hidden" name="correct_inhibit" id="correct_inhibit" value="0">
+              <input type="hidden" name="commission_errors" id="commission_errors" value="0">
+              <input type="hidden" name="reaction_times" id="reaction_times" value="[]">
+
+              <!-- Progress note -->
               <div
-                style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-top: 30px; margin-bottom: 20px;">
-                <p style="text-align: center; color: #64748b; margin: 0;">
-                  <strong>Assessment Progress:</strong> You've completed all sections!<br>
-                  <span style="font-size: 0.9rem;">Review your answers and click Submit when ready</span>
+                style="background: rgba(255,255,255,0.03); padding: 18px; border-radius: 12px; margin-top: 10px; margin-bottom: 20px; border: 1px solid var(--card-border);">
+                <p style="text-align: center; color: var(--text-muted); margin: 0; font-size:0.9rem;">
+                  <strong style="color:var(--text-main)">Assessment Progress:</strong> You've completed all
+                  sections!<br>
+                  Complete both games above, then submit when ready.
                 </p>
               </div>
 
@@ -895,21 +1039,15 @@
     document.getElementById("age").addEventListener("input", function () {
       const age = parseInt(this.value);
       const stageSelect = document.getElementById("EducationStage");
-
-      if (age >= 5 && age <= 12) {
-        stageSelect.value = "Child";
-      } else if (age >= 13 && age <= 18) {
-        stageSelect.value = "Teen";
-      } else if (age >= 19 && age <= 22) {
-        stageSelect.value = "Undergrad";
-      } else if (age >= 23) {
-        stageSelect.value = "Adult";
-      }
+      if (age >= 5 && age <= 12) stageSelect.value = "Child";
+      else if (age >= 13 && age <= 18) stageSelect.value = "Teen";
+      else if (age >= 19 && age <= 22) stageSelect.value = "Undergrad";
+      else if (age >= 23) stageSelect.value = "Adult";
     });
 
-    // Listen for game completion
+    // ── Go/No-Go game completion ──────────────────────────────────────────────
     window.addEventListener('message', function (event) {
-      if (event.data.gameCompleted) {
+      if (event.data && event.data.gameCompleted) {
         document.getElementById('InattentionScore').value = event.data.inattentionScore;
         document.getElementById('ImpulsivityScore').value = event.data.impulsivityScore;
         document.getElementById('total_trials').value = event.data.total_trials;
@@ -918,11 +1056,26 @@
         document.getElementById('correct_inhibit').value = event.data.correct_inhibit;
         document.getElementById('commission_errors').value = event.data.commission_errors;
         document.getElementById('reaction_times').value = JSON.stringify(event.data.reaction_times);
-
         document.getElementById('game-completion-status').style.display = 'block';
       }
     });
+
+    // ── Fix submit button — remove the checkValidity blocker ─────────────────
+    // The DOMContentLoaded listener in <head> has a submitBtn click handler
+    // that calls form.checkValidity() and blocks submission if hidden section
+    // inputs are :invalid. We override it here so it never blocks.
+    document.addEventListener('DOMContentLoaded', function () {
+      const submitBtn = document.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        // Clone and replace to remove the old listener added in <head>
+        const newBtn = submitBtn.cloneNode(true);
+        submitBtn.parentNode.replaceChild(newBtn, submitBtn);
+        // No listener on the new button — form submits naturally via onsubmit="calculateScores()"
+      }
+    });
   </script>
+
+
 </body>
 
 </html>
