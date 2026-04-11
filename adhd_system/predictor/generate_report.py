@@ -537,21 +537,39 @@ def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
         caption_style))
     story.append(Spacer(1, 10))
 
-    # ── Section 2: Go/No-Go ───────────────────────────────────────────────────
-    story.append(Paragraph("2. Go / No-Go Game Performance", sec_style))
+    # ── Section 2: Game Performance Statistics (Combined) ───────────────────
+    story.append(Paragraph("2. Game Performance Statistics", sec_style))
     story.append(HRFlowable(width="100%", thickness=0.5, color=BLUE, spaceAfter=8))
 
+    # Go/No-Go stats
     total_t = game_data.get('total_trials', 0)
     hit_r   = game_data.get('correct_go', 0) / max(total_t, 1) * 100
     com_r   = game_data.get('commission_errors', 0) / max(total_t, 1) * 100
     rts     = game_data.get('reaction_times', [])
     mean_rt_str = f"{int(np.mean(rts))} ms" if rts else "N/A"
 
+    # Time game stats
+    time_rounds = time_game_data.get('rounds', [])
+    time_performed = len(time_rounds) > 0
+    if time_performed:
+        time_errors = [r['actual_ms'] - r['target_ms'] for r in time_rounds]
+        time_abs_errors = [abs(e) for e in time_errors]
+        time_mean_abs_err = np.mean(time_abs_errors)
+        time_early_count = sum(1 for e in time_errors if e < 0)
+        time_mean_err_pct = np.mean([abs(r['actual_ms'] - r['target_ms']) / r['target_ms'] * 100 for r in time_rounds])
+        time_accuracy_str = f"{100-time_mean_err_pct:.0f}%"
+    else:
+        time_accuracy_str = "Not played"
+
+    # Combined table
     stat_data = [
-        ["Total Trials", "Hit Rate", "Commission Error Rate", "Mean Reaction Time"],
-        [str(total_t), f"{hit_r:.0f}%", f"{com_r:.0f}%", mean_rt_str]
+        ["Metric", "Go/No-Go", "Time Perception Game"],
+        ["Total Trials / Rounds", str(total_t), f"{len(time_rounds)} rounds" if time_performed else "—"],
+        ["Hit Rate / Accuracy", f"{hit_r:.0f}%", time_accuracy_str],
+        ["Error Rate", f"{com_r:.0f}%", f"{time_mean_err_pct:.0f}% deviation" if time_performed else "—"],
+        ["Mean Reaction Time", mean_rt_str, f"{int(time_mean_abs_err)} ms" if time_performed else "—"],
     ]
-    stat_t = Table(stat_data, colWidths=[4.25*cm]*4)
+    stat_t = Table(stat_data, colWidths=[5*cm, 6*cm, 6*cm])
     stat_t.setStyle(TableStyle([
         ('BACKGROUND', (0,0),(-1,0), BLUE),
         ('TEXTCOLOR',  (0,0),(-1,0), WHITE),
@@ -560,17 +578,21 @@ def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
         ('ALIGN',      (0,0),(-1,-1), 'CENTER'),
         ('VALIGN',     (0,0),(-1,-1), 'MIDDLE'),
         ('ROWPADDING', (0,0),(-1,-1), 8),
-        ('BACKGROUND', (0,1),(-1,1), LIGHT_BLUE),
+        ('BACKGROUND', (0,1),(-1,-1), LIGHT_BLUE),
         ('BOX',        (0,0),(-1,-1), 0.5, BLUE),
         ('INNERGRID',  (0,0),(-1,-1), 0.5, colors.HexColor("#BFDBFE")),
     ]))
     story.append(stat_t)
-    story.append(Spacer(1, 8))
+    story.append(Spacer(1, 10))
+
+    # ── Subsection 2a: Go/No-Go Game ──────────────────────────────────────
+    story.append(Paragraph("2.1 Go / No-Go Game Performance", sec_style))
+    story.append(HRFlowable(width="100%", thickness=0.5, color=BLUE, spaceAfter=8))
     story.append(_chart_go_nogo(game_data))
     story.append(Spacer(1, 10))
 
-    # ── Section 3: Time Perception Game ─────────────────────────────────────── NEW
-    story.append(Paragraph("3. Time Perception Game Performance", sec_style))
+    # ── Subsection 2b: Time Perception Game ─────────────────────────────────
+    story.append(Paragraph("2.2 Time Perception Game Performance", sec_style))
     story.append(HRFlowable(width="100%", thickness=0.5, color=TEAL, spaceAfter=8))
 
     rounds = time_game_data.get('rounds', [])
@@ -631,8 +653,8 @@ def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
 
     story.append(Spacer(1, 10))
 
-    # ── Section 4: Profile + Risk Factors ────────────────────────────────────
-    story.append(Paragraph("4. Profile Comparison & Risk Factors", sec_style))
+    # ── Section 3: Profile + Risk Factors ────────────────────────────────────
+    story.append(Paragraph("3. Profile Comparison & Risk Factors", sec_style))
     story.append(HRFlowable(width="100%", thickness=0.5, color=BLUE, spaceAfter=8))
     radar_img  = _chart_radar(user_data)
     binary_img = _chart_binary_factors(user_data)
@@ -643,14 +665,14 @@ def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
     story.append(two_col)
     story.append(Spacer(1, 10))
 
-    # ── Section 5: Lifestyle ──────────────────────────────────────────────────
-    story.append(Paragraph("5. Lifestyle Indicators", sec_style))
+    # ── Section 4: Lifestyle ──────────────────────────────────────────────────
+    story.append(Paragraph("4. Lifestyle Indicators", sec_style))
     story.append(HRFlowable(width="100%", thickness=0.5, color=BLUE, spaceAfter=8))
     story.append(_chart_lifestyle(user_data))
     story.append(Spacer(1, 10))
 
-    # ── Section 6: Detailed Interpretation ───────────────────────────────────
-    story.append(Paragraph("6. Detailed Interpretation", sec_style))
+    # ── Section 5: Detailed Interpretation ───────────────────────────────────
+    story.append(Paragraph("5. Detailed Interpretation", sec_style))
     story.append(HRFlowable(width="100%", thickness=0.5, color=BLUE, spaceAfter=8))
 
     for heading, body in _symptom_interpretation(user_data, prediction, game_data, time_game_data):

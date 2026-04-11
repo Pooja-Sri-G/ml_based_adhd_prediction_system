@@ -129,7 +129,7 @@ def predict(request):
 
         try:
             project_root = os.path.dirname(os.path.dirname(base))
-            dataset_path = os.path.join(project_root, 'ml', 'adhd_ratio_70.csv')
+            dataset_path = os.path.join(project_root, 'ml', 'adhd.csv')
             row_data = [
                 user_data_raw['age'], user_data_raw['Gender'], user_data_raw['EducationStage'],
                 user_data_raw['InattentionScore'], user_data_raw['HyperactivityScore'],
