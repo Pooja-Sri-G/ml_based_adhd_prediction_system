@@ -13,7 +13,6 @@ adhd_model = joblib.load(os.path.join(base, 'adhdModel.pkl'))
 
 def predict(request):
     if request.method == 'POST':
-        # Collect raw assessment data with proper validation
         try:
             user_data_raw = {
                 'age': int(request.POST.get('age', 0)),
@@ -37,7 +36,7 @@ def predict(request):
             print(f"Data conversion error: {e}")
             return render(request, 'index.html', {'error': 'Invalid form data. Please check your entries.'})
 
-        # Go/No-Go game data for the report
+        # go/no-go game data 
         game_data = {
             'total_trials': int(request.POST.get('total_trials', 0)),
             'correct_go': int(request.POST.get('correct_go', 0)),
@@ -47,18 +46,15 @@ def predict(request):
             'reaction_times': json.loads(request.POST.get('reaction_times', '[]'))
         }
 
-        # ── Time game data for the report ──────────────────────────────────
-        # time_game_rounds is a JSON array of {target_ms, actual_ms} objects
-        # sent by time_game.js via the hidden field in index.html
+        # time game data for the report
         try:
             raw_rounds = json.loads(request.POST.get('time_game_rounds', '[]'))
         except (json.JSONDecodeError, TypeError):
             raw_rounds = []
 
         time_game_data = {'rounds': raw_rounds}
-        # ───────────────────────────────────────────────────────────────────
 
-        # Transform features for model prediction with error handling
+        # transform features for model prediction
         try:
             gender_enc    = label_encoders['Gender'].transform([user_data_raw['Gender']])[0]
             education_enc = label_encoders['EducationStage'].transform([user_data_raw['EducationStage']])[0]
@@ -99,7 +95,7 @@ def predict(request):
         X = scaler.transform([features])
         prediction = int(adhd_model.predict(X)[0])
 
-        # Store everything in session for report generation
+        # Storing everything in session for report generation
         request.session['assessment_report_data'] = {
             'user_data': {
                 'Age': user_data_raw['age'],

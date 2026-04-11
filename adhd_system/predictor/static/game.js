@@ -28,7 +28,6 @@ function startGame() {
     statusText.style.color = "var(--text-main)";
 
     nextStimulus();
-    // Test duration: 30 seconds
     setTimeout(endGame, 30000);
 }
 
@@ -41,7 +40,6 @@ function nextStimulus() {
     setTimeout(() => {
         if (!gameRunning) return;
 
-        // 70% green (attention test), 30% red (impulsivity test)
         currentColor = Math.random() < 0.7 ? "green" : "red";
 
         box.style.backgroundColor = currentColor === "green" ? "#10b981" : "#ef4444";
@@ -56,7 +54,6 @@ function nextStimulus() {
         if (currentColor === "green") totalGreen++;
         else totalRed++;
 
-        // Stimulus visible for 1 second
         setTimeout(() => {
             if (clickable && gameRunning) {
                 if (currentColor === "green") {
@@ -77,7 +74,6 @@ box.onclick = () => {
     box.style.display = "none";
 
     if (currentColor === "green") {
-        // Only log RT for correct Go responses
         reactionTimes.push(reactionTime);
     } else if (currentColor === "red") {
         clickedRed++;
@@ -86,25 +82,11 @@ box.onclick = () => {
     nextStimulus();
 };
 
-// ─────────────────────────────────────────────────────────────
-// REACTION TIME ANALYSIS
-// Research basis: ADHD is associated with slower mean RT AND
-// higher RT variability (SD). Variability is considered the
-// stronger cognitive marker. (Hervey et al., 2004;
-// Epstein et al., 2003)
-// ─────────────────────────────────────────────────────────────
-
-/**
- * Returns mean of an array. Returns null if empty.
- */
 function mean(arr) {
     if (arr.length === 0) return null;
     return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
 
-/**
- * Returns standard deviation of an array. Returns null if < 2 values.
- */
 function stdDev(arr) {
     if (arr.length < 2) return null;
     const m = mean(arr);
@@ -112,18 +94,7 @@ function stdDev(arr) {
     return Math.sqrt(variance);
 }
 
-/**
- * Scores inattention (0–5) using BOTH omission error rate AND reaction time.
- *
- * Omission errors  → missed green boxes      → pure attention failures
- * Slow mean RT     → delayed responses        → sluggish attention engagement
- * High RT variability (SD) → inconsistent RT → hallmark of ADHD attention dysregulation
- *
- * Each component contributes equally (weighted 1/3 each).
- * Final score is rounded to nearest integer in 0–5 range.
- */
 function getInattentionScore(omissionRate, meanRT, rtSD) {
-    // --- Component 1: Omission error rate (0–5) ---
     let omissionScore;
     if (omissionRate <= 0.05)       omissionScore = 0;
     else if (omissionRate <= 0.15)  omissionScore = 1;
@@ -132,9 +103,6 @@ function getInattentionScore(omissionRate, meanRT, rtSD) {
     else if (omissionRate <= 0.70)  omissionScore = 4;
     else                            omissionScore = 5;
 
-    // --- Component 2: Mean reaction time (0–5) ---
-    // Normal RT for healthy adults: ~250–400ms
-    // Slow RT (>600ms) is associated with inattention
     let rtMeanScore = 0;
     if (meanRT !== null) {
         if (meanRT <= 300)       rtMeanScore = 0;
@@ -145,9 +113,6 @@ function getInattentionScore(omissionRate, meanRT, rtSD) {
         else                     rtMeanScore = 5;
     }
 
-    // --- Component 3: RT variability / standard deviation (0–5) ---
-    // Low SD (~50–80ms) = consistent attention
-    // High SD (>200ms)  = highly variable, ADHD marker
     let rtSDScore = 0;
     if (rtSD !== null) {
         if (rtSD <= 60)        rtSDScore = 0;
@@ -158,8 +123,6 @@ function getInattentionScore(omissionRate, meanRT, rtSD) {
         else                   rtSDScore = 5;
     }
 
-    // Weighted average: variability weighted slightly higher as it's
-    // the stronger ADHD marker per Hervey et al. (2004)
     const weighted = (omissionScore * 0.30) + (rtMeanScore * 0.30) + (rtSDScore * 0.40);
     return Math.min(5, Math.round(weighted));
 }
@@ -186,7 +149,6 @@ function endGame() {
     const inScore = getInattentionScore(omissionRate, meanRT, rtSD);
     const imScore = getImpulsivityScore(commissionRate);
 
-    // Pass data back to parent form
     if (window.opener && !window.opener.closed) {
         try {
             window.opener.document.getElementById("InattentionScore").value  = inScore;
@@ -198,7 +160,6 @@ function endGame() {
             window.opener.document.getElementById("commission_errors").value = clickedRed;
             window.opener.document.getElementById("reaction_times").value    = JSON.stringify(reactionTimes);
 
-            // Show completion status in parent
             const statusDiv = window.opener.document.getElementById("game-completion-status");
             if (statusDiv) statusDiv.style.display = "block";
 

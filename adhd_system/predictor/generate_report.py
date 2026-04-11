@@ -1,7 +1,3 @@
-"""
-generate_report.py  —  Updated with Time Perception Game section
-"""
-
 import io
 import matplotlib
 matplotlib.use('Agg')
@@ -20,7 +16,6 @@ from reportlab.platypus import (
 from datetime import datetime
 
 
-# ── Colour palette ────────────────────────────────────────────────────────────
 BLUE        = colors.HexColor("#3B82F6")
 LIGHT_BLUE  = colors.HexColor("#EFF6FF")
 RED         = colors.HexColor("#EF4444")
@@ -37,7 +32,6 @@ LIGHT_GRAY  = colors.HexColor("#F1F5F9")
 WHITE       = colors.white
 
 
-# ── Thresholds ────────────────────────────────────────────────────────────────
 THRESHOLDS = {
     "InattentionScore":   {"low": 3,  "high": 6,  "max": 5,  "label": "Inattention"},
     "ImpulsivityScore":   {"low": 3,  "high": 6,  "max": 5,  "label": "Impulsivity"},
@@ -56,11 +50,9 @@ SCORE_KEYS    = ["InattentionScore", "ImpulsivityScore", "HyperactivityScore", "
 LIFESTYLE_KEYS = ["SleepHours", "ScreenTime", "AcademicScore"]
 BINARY_KEYS   = ["ComorbidAnxiety", "ComorbidDepression", "FamilyHistoryADHD"]
 
-# Time game round targets (must match time_game.js ROUND_TARGETS)
 TIME_GAME_TARGETS = [2000, 3000, 5000, 4000, 3000]
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
 def _buf_to_rl_image(fig, width_cm=14):
     buf = io.BytesIO()
     fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
@@ -87,12 +79,11 @@ def _risk_color(value, threshold_key):
         return "#EF4444"
 
 
-# ── Chart: core symptom scores ────────────────────────────────────────────────
 def _chart_symptom_scores(user_data):
     keys       = SCORE_KEYS
     labels     = [THRESHOLDS[k]["label"] for k in keys]
     values     = [float(user_data.get(k, 0)) for k in keys]
-    maxes      = [5, 5, 5, 3, 3]   # InattentionScore/ImpulsivityScore/HyperactivityScore max=5; others=3
+    maxes      = [5, 5, 5, 3, 3]   
     bar_colors = [_risk_color(v, k) for v, k in zip(values, keys)]
 
     fig, ax = plt.subplots(figsize=(8, 3.5))
@@ -118,7 +109,6 @@ def _chart_symptom_scores(user_data):
     return _buf_to_rl_image(fig)
 
 
-# ── Chart: Go/No-Go ───────────────────────────────────────────────────────────
 def _chart_go_nogo(game_data):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 3.5))
 
@@ -164,17 +154,9 @@ def _chart_go_nogo(game_data):
     return _buf_to_rl_image(fig, width_cm=15)
 
 
-# ── NEW: Chart: Time Perception Game ─────────────────────────────────────────
 def _chart_time_game(time_game_data):
-    """
-    Two subplots:
-    Left  — bar chart: target vs actual hold duration for each round
-    Right — deviation bar chart showing how far off (ms) for each round
-            positive = too late, negative = too early (ADHD pattern)
-    """
     rounds  = time_game_data.get('rounds', [])
     if not rounds:
-        # No data — return a placeholder
         fig, ax = plt.subplots(figsize=(9, 3))
         ax.text(0.5, 0.5, 'Time game not played', ha='center', va='center',
                 transform=ax.transAxes, fontsize=12, color='gray')
@@ -190,7 +172,6 @@ def _chart_time_game(time_game_data):
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 3.5))
 
-    # ── Left: target vs actual ──
     x = np.arange(n)
     w = 0.35
     ax1.bar(x - w/2, targets, w, label='Target',  color='#3B82F6', alpha=0.85)
@@ -202,7 +183,6 @@ def _chart_time_game(time_game_data):
     ax1.legend(fontsize=8)
     ax1.spines[['top','right']].set_visible(False)
 
-    # ── Right: deviation per round ──
     bar_colors = ['#EF4444' if e < 0 else '#F97316' for e in errors]
     ax2.bar(x, errors, color=bar_colors, alpha=0.85)
     ax2.axhline(0, color='#1E293B', linewidth=1)
@@ -211,7 +191,6 @@ def _chart_time_game(time_game_data):
     ax2.set_ylabel("Deviation (ms)", fontsize=9)
     ax2.set_title("Timing Deviation per Round", fontsize=11, fontweight='bold')
 
-    # Annotation
     early_count = sum(1 for e in errors if e < 0)
     note = f"Released early {early_count}/{n} rounds"
     ax2.text(0.98, 0.97, note, transform=ax2.transAxes,
@@ -230,7 +209,6 @@ def _chart_time_game(time_game_data):
     return _buf_to_rl_image(fig, width_cm=15)
 
 
-# ── Chart: radar ─────────────────────────────────────────────────────────────
 def _chart_radar(user_data):
     cats   = ["Inattention", "Impulsivity", "Hyperactivity", "Daydreaming", "RSD"]
     keys   = ["InattentionScore", "ImpulsivityScore", "HyperactivityScore", "Daydreaming", "RSD"]
@@ -259,7 +237,6 @@ def _chart_radar(user_data):
     return _buf_to_rl_image(fig, width_cm=10)
 
 
-# ── Chart: binary risk factors ────────────────────────────────────────────────
 def _chart_binary_factors(user_data):
     keys       = BINARY_KEYS
     labels     = [THRESHOLDS[k]["label"] for k in keys]
@@ -284,7 +261,6 @@ def _chart_binary_factors(user_data):
     return _buf_to_rl_image(fig, width_cm=10)
 
 
-# ── Chart: lifestyle ─────────────────────────────────────────────────────────
 def _chart_lifestyle(user_data):
     keys       = LIFESTYLE_KEYS
     labels     = [THRESHOLDS[k]["label"] for k in keys]
@@ -306,7 +282,6 @@ def _chart_lifestyle(user_data):
     return _buf_to_rl_image(fig, width_cm=14)
 
 
-# ── Interpretation text ───────────────────────────────────────────────────────
 def _symptom_interpretation(user_data, prediction, game_data, time_game_data):
     inatt  = float(user_data.get("InattentionScore", 0))
     impuls = float(user_data.get("ImpulsivityScore", 0))
@@ -328,7 +303,6 @@ def _symptom_interpretation(user_data, prediction, game_data, time_game_data):
 
     items = []
 
-    # ── Core scores ──
     sym_parts = []
     for score, label, threshold in [(inatt, "inattention", 3.0), (impuls, "impulsivity", 3.0), (hyper, "hyperactivity", 2.0)]:
         if score >= threshold * 2:
@@ -339,7 +313,6 @@ def _symptom_interpretation(user_data, prediction, game_data, time_game_data):
             sym_parts.append(f"{label.capitalize()} score ({score}/5) is low.")
     items.append(("Core Symptom Scores", " ".join(sym_parts)))
 
-    # ── Go/No-Go ──
     game_parts = []
     if commission_rate > 0.20:
         game_parts.append(f"Commission errors on {commission_rate*100:.0f}% of No-Go trials — a key impulsivity marker.")
@@ -358,7 +331,6 @@ def _symptom_interpretation(user_data, prediction, game_data, time_game_data):
             game_parts.append(f"Average reaction time ({mean_rt} ms) was in the normal range.")
     items.append(("Go / No-Go Game Interpretation", " ".join(game_parts)))
 
-    # ── Time game ── NEW
     time_parts = []
     rounds = time_game_data.get('rounds', [])
     if rounds:
@@ -392,7 +364,6 @@ def _symptom_interpretation(user_data, prediction, game_data, time_game_data):
 
     items.append(("Time Perception Game Interpretation", " ".join(time_parts)))
 
-    # ── Lifestyle ──
     life_parts = []
     if sleep < 6:
         life_parts.append(f"Sleep of {sleep} hrs is low — can amplify ADHD symptoms.")
@@ -412,7 +383,6 @@ def _symptom_interpretation(user_data, prediction, game_data, time_game_data):
         life_parts.append(f"Academic score is average ({acad}).")
     items.append(("Lifestyle & Academic Indicators", " ".join(life_parts)))
 
-    # ── Risk factors ──
     risk_parts = []
     if family:     risk_parts.append("Family history of ADHD increases genetic predisposition.")
     if anxiety:    risk_parts.append("Comorbid anxiety was reported — frequently co-occurs with ADHD.")
@@ -421,7 +391,6 @@ def _symptom_interpretation(user_data, prediction, game_data, time_game_data):
         risk_parts.append("No additional biological or psychological risk factors were reported.")
     items.append(("Additional Risk Factors", " ".join(risk_parts)))
 
-    # ── Conclusion ──
     if prediction == 1:
         conclusion = (
             "Based on combined analysis of symptom scores, Go/No-Go game performance, "
@@ -439,20 +408,10 @@ def _symptom_interpretation(user_data, prediction, game_data, time_game_data):
     return items
 
 
-# ── Main public function ──────────────────────────────────────────────────────
 def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
                          user_name: str = "User",
                          time_game_data: dict = None) -> bytes:
-    """
-    Parameters
-    ----------
-    user_data      : feature dict from views.py session
-    game_data      : Go/No-Go stats dict
-    prediction     : 0 or 1
-    user_name      : display name
-    time_game_data : dict with key 'rounds' — list of {target_ms, actual_ms, error_ms}
-                     Pass None or empty dict if game was not played.
-    """
+    
     if time_game_data is None:
         time_game_data = {}
 
@@ -476,7 +435,6 @@ def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
 
     story = []
 
-    # ── Banner ────────────────────────────────────────────────────────────────
     result_text = "ADHD INDICATORS DETECTED" if prediction == 1 else "NO ADHD INDICATORS DETECTED"
     banner_data = [[
         Paragraph("<font size='20'><b>ADHD Assessment Report</b></font>", styles['Normal']),
@@ -497,7 +455,6 @@ def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
     story.append(banner)
     story.append(Spacer(1, 10))
 
-    # ── User info ─────────────────────────────────────────────────────────────
     info_items = [("Name", user_name), ("Age", str(user_data.get("Age","—"))),
                   ("Gender", user_data.get("Gender","—")), ("Education", user_data.get("EducationStage","—"))]
     info_data  = [[Paragraph(f"<b>{k}</b><br/>{v}", small_bold) for k, v in info_items]]
@@ -513,7 +470,6 @@ def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
     story.append(info_table)
     story.append(Spacer(1, 14))
 
-    # ── Disclaimer ────────────────────────────────────────────────────────────
     disc = Table([[Paragraph(
         "<b>⚠ Important Disclaimer:</b> This report is generated by a machine learning model "
         "for educational purposes only. It is <b>not</b> a clinical diagnosis. Consult a licensed "
@@ -527,7 +483,7 @@ def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
     story.append(disc)
     story.append(Spacer(1, 16))
 
-    # ── Section 1: Symptom Scores ─────────────────────────────────────────────
+    # Section 1: Symptom Scores 
     story.append(Paragraph("1. Core ADHD Symptom Scores", sec_style))
     story.append(HRFlowable(width="100%", thickness=0.5, color=BLUE, spaceAfter=8))
     story.append(_chart_symptom_scores(user_data))
@@ -537,7 +493,7 @@ def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
         caption_style))
     story.append(Spacer(1, 10))
 
-    # ── Section 2: Game Performance Statistics (Combined) ───────────────────
+    # Section 2: Game Performance Statistics 
     story.append(Paragraph("2. Game Performance Statistics", sec_style))
     story.append(HRFlowable(width="100%", thickness=0.5, color=BLUE, spaceAfter=8))
 
@@ -585,13 +541,13 @@ def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
     story.append(stat_t)
     story.append(Spacer(1, 10))
 
-    # ── Subsection 2a: Go/No-Go Game ──────────────────────────────────────
+    #  Subsection 2a: Go/No-Go Game 
     story.append(Paragraph("2.1 Go / No-Go Game Performance", sec_style))
     story.append(HRFlowable(width="100%", thickness=0.5, color=BLUE, spaceAfter=8))
     story.append(_chart_go_nogo(game_data))
     story.append(Spacer(1, 10))
 
-    # ── Subsection 2b: Time Perception Game ─────────────────────────────────
+    #  Subsection 2b: Time Perception Game 
     story.append(Paragraph("2.2 Time Perception Game Performance", sec_style))
     story.append(HRFlowable(width="100%", thickness=0.5, color=TEAL, spaceAfter=8))
 
@@ -653,7 +609,7 @@ def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
 
     story.append(Spacer(1, 10))
 
-    # ── Section 3: Profile + Risk Factors ────────────────────────────────────
+    # Section 3: Profile + Risk Factors 
     story.append(Paragraph("3. Profile Comparison & Risk Factors", sec_style))
     story.append(HRFlowable(width="100%", thickness=0.5, color=BLUE, spaceAfter=8))
     radar_img  = _chart_radar(user_data)
@@ -665,13 +621,13 @@ def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
     story.append(two_col)
     story.append(Spacer(1, 10))
 
-    # ── Section 4: Lifestyle ──────────────────────────────────────────────────
+    #  Section 4: Lifestyle 
     story.append(Paragraph("4. Lifestyle Indicators", sec_style))
     story.append(HRFlowable(width="100%", thickness=0.5, color=BLUE, spaceAfter=8))
     story.append(_chart_lifestyle(user_data))
     story.append(Spacer(1, 10))
 
-    # ── Section 5: Detailed Interpretation ───────────────────────────────────
+    # Section 5: Detailed Interpretation 
     story.append(Paragraph("5. Detailed Interpretation", sec_style))
     story.append(HRFlowable(width="100%", thickness=0.5, color=BLUE, spaceAfter=8))
 
@@ -699,7 +655,6 @@ def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
         story.append(t)
         story.append(Spacer(1, 8))
 
-    # ── Footer ────────────────────────────────────────────────────────────────
     story.append(Spacer(1, 12))
     story.append(HRFlowable(width="100%", thickness=0.5, color=GRAY))
     story.append(Spacer(1, 6))
@@ -716,7 +671,6 @@ def generate_adhd_report(user_data: dict, game_data: dict, prediction: int,
     return buf.read()
 
 
-# ── Standalone test ───────────────────────────────────────────────────────────
 if __name__ == "__main__":
     sample_user = {
         'Age': 22, 'Gender': 'Male', 'EducationStage': 'University',
