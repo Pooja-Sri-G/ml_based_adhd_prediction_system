@@ -1,7 +1,6 @@
 import joblib
 import os
 import json
-import csv
 from django.shortcuts import render 
 from django.http import HttpResponse
 from .generate_report import generate_adhd_report
@@ -122,23 +121,6 @@ def predict(request):
         }
 
         result_text = "There are possible signs of ADHD from your answers." if prediction == 1 else "You might not have ADHD"
-
-        try:
-            project_root = os.path.dirname(os.path.dirname(base))
-            dataset_path = os.path.join(project_root, 'ml', 'adhd.csv')
-            row_data = [
-                user_data_raw['age'], user_data_raw['Gender'], user_data_raw['EducationStage'],
-                user_data_raw['InattentionScore'], user_data_raw['HyperactivityScore'],
-                user_data_raw['ImpulsivityScore'], symptomsum, user_data_raw['DayDreaming'],
-                user_data_raw['RSD'], user_data_raw['SleepHours'], user_data_raw['ScreenTime'],
-                user_data_raw['ComorbidAnxiety'], user_data_raw['ComorbidDepression'],
-                user_data_raw['FamilyHistoryADHD'], user_data_raw['Medication'],
-                user_data_raw['SchoolSupport'], user_data_raw['AcademicScore'], prediction
-            ]
-            with open(dataset_path, mode='a', newline='') as file:
-                csv.writer(file).writerow(row_data)
-        except Exception as e:
-            print(f"Error saving to dataset: {e}")
 
         return render(request, "result.html", {"prediction": prediction, "result": result_text})
 

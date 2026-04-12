@@ -347,7 +347,8 @@
           e.preventDefault();
           currentSection = idx;
           updateDisplay();
-          closeSidebar(); // auto-close sidebar after nav tap on mobile
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          closeSidebar(); 
         });
       });
 
@@ -489,7 +490,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q1:</strong> Do you often fail to give close attention to details, or make careless mistakes in your work, schoolwork, or during other activities?</p>
+                <p class="question-text"> Do you often fail to give close attention to details, or make careless mistakes in your work, schoolwork, or during other activities?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Not reading instructions carefully, working too quickly and making mistakes, missing important details</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="inattention_q1" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -499,7 +500,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q2:</strong> Do you often find it difficult to sustain your attention during tasks or activities?</p>
+                <p class="question-text"> Do you often find it difficult to sustain your attention during tasks or activities?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Can't keep attention on tasks for long, quickly distracted by your own thoughts, hard to watch a film or read a book to the end</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="inattention_q2" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -509,7 +510,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q3:</strong> Does it often seem as though you are not listening when someone speaks to you directly?</p>
+                <p class="question-text"> Does it often seem as though you are not listening when someone speaks to you directly?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Dreamy or preoccupied, difficulty concentrating on conversations, not knowing what was said afterward</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="inattention_q3" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -519,7 +520,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q4:</strong> Do you often fail to follow through on instructions and fail to finish tasks or meet obligations?</p>
+                <p class="question-text"> Do you often fail to follow through on instructions and fail to finish tasks or meet obligations?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Start things but don't complete them, difficulty completing tasks once novelty wears off, need deadlines</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="inattention_q4" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -529,7 +530,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q5:</strong> Do you often find it difficult to organize tasks and activities?</p>
+                <p class="question-text"> Do you often find it difficult to organize tasks and activities?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Difficulty planning daily life, disorganized space, arriving late, poor time management, double-booking</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="inattention_q5" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -539,7 +540,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q6:</strong> Do you often avoid or have an aversion to tasks that require sustained mental effort?</p>
+                <p class="question-text"> Do you often avoid or have an aversion to tasks that require sustained mental effort?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Postpone boring or difficult tasks, do easy things first, avoid paperwork or reading</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="inattention_q6" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -549,7 +550,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q7:</strong> Do you often lose things that are necessary for tasks or activities?</p>
+                <p class="question-text"> Do you often lose things that are necessary for tasks or activities?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Misplace wallet/keys, lose papers, spend time searching for things, leave things behind</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="inattention_q7" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -559,7 +560,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q8:</strong> Are you often easily distracted by external stimuli or unrelated thoughts?</p>
+                <p class="question-text"> Are you often easily distracted by external stimuli or unrelated thoughts?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Easily distracted by noises/events, difficulty filtering information, hard to pick up the thread again</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="inattention_q8" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -569,7 +570,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q9:</strong> Are you often forgetful in daily activities?</p>
+                <p class="question-text"> Are you often forgetful in daily activities?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Forget appointments, need frequent reminders, return home for forgotten things, forget to check agenda</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="inattention_q9" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -588,7 +589,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q10:</strong> Do you often fidget with your hands or feet, or squirm in your seat?</p>
+                <p class="question-text"> Do you often fidget with your hands or feet, or squirm in your seat?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Difficulty sitting still, tapping pen, playing with things, fiddling with hair, biting nails</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="hyperactivity_q1" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -598,7 +599,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q11:</strong> Do you often stand up in situations where remaining seated is expected?</p>
+                <p class="question-text"> Do you often stand up in situations where remaining seated is expected?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Avoid long meetings/lectures, prefer walking around, never sit still for long, make excuses to move</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="hyperactivity_q2" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -608,7 +609,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q12:</strong> Do you often feel restless or have difficulty relaxing?</p>
+                <p class="question-text"> Do you often feel restless or have difficulty relaxing?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Feel restless inside, constantly need to be doing something, hard to relax, feel agitated</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="hyperactivity_q3" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -618,7 +619,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q13:</strong> Do you often have difficulty engaging in leisure activities quietly?</p>
+                <p class="question-text"> Do you often have difficulty engaging in leisure activities quietly?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Being loud in various situations, talking during activities, difficulty doing things quietly</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="hyperactivity_q4" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -628,7 +629,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q14:</strong> Are you often "on the go" or act as if "driven by a motor"?</p>
+                <p class="question-text"> Are you often "on the go" or act as if "driven by a motor"?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Always busy doing something, too much energy, constantly on the move, excessively driven</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="hyperactivity_q5" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -638,7 +639,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q15:</strong> Do you often talk excessively?</p>
+                <p class="question-text"> Do you often talk excessively?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Known as talkative, hard to stop talking, tendency to talk too much, not letting others speak</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="hyperactivity_q6" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -648,7 +649,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q16:</strong> Do you often blurt out answers before questions have been completed?</p>
+                <p class="question-text"> Do you often blurt out answers before questions have been completed?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Saying what you think immediately, giving answers before others finish speaking, completing others' words</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="hyperactivity_q7" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -658,7 +659,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q17:</strong> Do you often have difficulty waiting your turn?</p>
+                <p class="question-text"> Do you often have difficulty waiting your turn?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Difficulty waiting in queues, impatient in traffic, can't wait turn in conversations, being impatient</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="hyperactivity_q8" value="0" required><span class="radio-custom">Never / Rarely</span></label>
@@ -668,7 +669,7 @@
               </div>
 
               <div class="question-group">
-                <p class="question-text"><strong>Q18:</strong> Do you often interrupt or intrude on others?</p>
+                <p class="question-text"> Do you often interrupt or intrude on others?</p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Examples: Quick to interfere, interrupts others, disturbs activities without being asked, has opinions on everything</p>
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px;">
                   <label class="radio-option"><input type="radio" name="hyperactivity_q9" value="0" required><span class="radio-custom">Never / Rarely</span></label>
