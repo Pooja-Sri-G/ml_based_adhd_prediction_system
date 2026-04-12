@@ -31,7 +31,6 @@ try:
 except ImportError:
     HAS_CATBOOST = False
 
-print("\n[1/8] Loading data...")
 script_dir = os.path.dirname(os.path.abspath(__file__))
 data_path = os.path.join(script_dir, 'adhd.csv')
 data = pd.read_csv(data_path)
