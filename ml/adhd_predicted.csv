@@ -1,0 +1,8 @@
+Age,Gender,EducationStage,InattentionScore,HyperactivityScore,ImpulsivityScore,SymptomSum,DayDreaming,RSD,SleepHours,ScreenTime,ComorbidAnxiety,ComorbidDepression,FamilyHistoryADHD,Medication,SchoolSupport,AcademicScore,ADHD
+44,Female,Adult,2,1,0,3,1,0,3,8,0,1,0,Non-stimulant,504,65.9,0
+37,Female,Adult,1,5,5,11,1,0,6,3,0,0,0,No,Therapy,77.8,1
+57,Male,Adult,1,2,1,4,0,1,7,5,0,1,0,Non-stimulant,Therapy,86.9,1
+19,Female,Undergrad,2,2,2,6,0,1,6.9,6.3,0,0,0,No,Accommodations,81.8,0
+33,Male,Adult,1,0,2,3,1,0,6.4,9.1,0,1,1,Stimulant,IEP,69.5,0
+22,Female,Undergrad,4,2,1,7,1,1,6.5,6.2,0,0,0,Non-stimulant,IEP,59,1
+28,Male,Adult,2,2,1,5,0,0,8.7,4.6,0,0,0,No,,68.9,0

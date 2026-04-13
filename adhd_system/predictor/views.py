@@ -1,6 +1,7 @@
 import joblib
 import os
 import json
+import csv
 from django.shortcuts import render 
 from django.http import HttpResponse
 from .generate_report import generate_adhd_report
@@ -121,6 +122,46 @@ def predict(request):
         }
 
         result_text = "There are possible signs of ADHD from your answers." if prediction == 1 else "You might not have ADHD"
+
+        # Save to adhd_predicted.csv 
+        try:
+            project_root = os.path.dirname(os.path.dirname(base))
+            predicted_dataset_path = os.path.join(project_root, 'ml', 'adhd_predicted.csv')
+            
+            row_data = [
+                user_data_raw['age'],
+                user_data_raw['Gender'],
+                user_data_raw['EducationStage'],
+                user_data_raw['InattentionScore'],
+                user_data_raw['HyperactivityScore'],
+                user_data_raw['ImpulsivityScore'],
+                symptomsum,
+                user_data_raw['DayDreaming'],
+                user_data_raw['RSD'],
+                user_data_raw['SleepHours'],
+                user_data_raw['ScreenTime'],
+                user_data_raw['ComorbidAnxiety'],
+                user_data_raw['ComorbidDepression'],
+                user_data_raw['FamilyHistoryADHD'],
+                user_data_raw['Medication'],
+                user_data_raw['SchoolSupport'],
+                user_data_raw['AcademicScore'],
+                prediction
+            ]
+            
+            file_exists = os.path.isfile(predicted_dataset_path)
+            headers = ['Age', 'Gender', 'EducationStage', 'InattentionScore', 'HyperactivityScore', 
+                      'ImpulsivityScore', 'SymptomSum', 'DayDreaming', 'RSD', 'SleepHours', 
+                      'ScreenTime', 'ComorbidAnxiety', 'ComorbidDepression', 'FamilyHistoryADHD', 
+                      'Medication', 'SchoolSupport', 'AcademicScore', 'ADHD']
+            
+            with open(predicted_dataset_path, mode='a', newline='') as file:
+                writer = csv.writer(file)
+                if not file_exists:
+                    writer.writerow(headers)
+                writer.writerow(row_data)
+        except Exception as e:
+            print(f"Error saving to adhd_predicted.csv: {e}")
 
         return render(request, "result.html", {"prediction": prediction, "result": result_text})
 

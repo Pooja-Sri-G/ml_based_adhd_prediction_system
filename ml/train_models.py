@@ -32,7 +32,7 @@ except ImportError:
     HAS_CATBOOST = False
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-data_path = os.path.join(script_dir, 'adhd.csv')
+data_path = os.path.join(script_dir, 'adhd_upsampled.csv')
 data = pd.read_csv(data_path)
 data.columns = data.columns.str.strip()
 
