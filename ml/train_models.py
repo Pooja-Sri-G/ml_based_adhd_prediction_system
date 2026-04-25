@@ -2,10 +2,9 @@ import pandas as pd
 import numpy as np
 import joblib
 import os
-from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.utils import resample
 from sklearn.metrics import (
     accuracy_score,
@@ -13,8 +12,7 @@ from sklearn.metrics import (
     f1_score,
     recall_score,
     precision_score,
-    roc_auc_score,
-    confusion_matrix
+    roc_auc_score
 )
 import warnings
 warnings.filterwarnings('ignore')
@@ -32,7 +30,7 @@ except ImportError:
     HAS_CATBOOST = False
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-data_path = os.path.join(script_dir, 'adhd_upsampled.csv')
+data_path = os.path.join(script_dir, 'adhd.csv')
 data = pd.read_csv(data_path)
 data.columns = data.columns.str.strip()
 
@@ -42,8 +40,7 @@ def get_features(df):
     df_new['SymptomSum'] = df_new['InattentionScore'] + df_new['HyperactivityScore'] + df_new['ImpulsivityScore']
     df_new['Inatt_Hyper_Inter'] = df_new['InattentionScore'] * df_new['HyperactivityScore']
     
-    st_col = 'ScreenTimeHours' if 'ScreenTimeHours' in df_new.columns else 'ScreenTime'
-    df_new['Screen_Sleep_Ratio'] = df_new[st_col] / (df_new['SleepHours'] + 0.1)
+    df_new['Screen_Sleep_Ratio'] = df_new['ScreenTimeHours'] / (df_new['SleepHours'] + 0.1)
     
     df_new['Symptom_Age_Ratio'] = df_new['SymptomSum'] / (df_new['Age'] + 1)
     
@@ -55,12 +52,14 @@ target = 'ADHD'
 X = data_engineered.drop(target, axis=1)
 y = data_engineered[target]
 
+# fill missing values
 for col in X.columns:
     if pd.api.types.is_numeric_dtype(X[col]):
         X[col] = X[col].fillna(X[col].median())
     else:
         X[col] = X[col].fillna('None')
 
+# encode categorical data
 label_encoders = {}
 for col in X.columns:
     if not pd.api.types.is_numeric_dtype(X[col]):
@@ -70,16 +69,8 @@ for col in X.columns:
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
-train_data = pd.concat([X_train, y_train], axis=1)
-maj = train_data[train_data[target] == 1]
-min = train_data[train_data[target] == 0]
-min_up = resample(min, replace=True, n_samples=len(maj), random_state=42)
-train_bal = pd.concat([maj, min_up]).sample(frac=1, random_state=42)
-X_train_bal = train_bal.drop(target, axis=1)
-y_train_bal = train_bal[target]
-
 scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train_bal)
+X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
 print("\n" + "="*65)
@@ -118,16 +109,16 @@ def print_and_store_metrics(name, model, X_tr, y_tr, X_te, y_te):
 rf = RandomForestClassifier(n_estimators=1000, random_state=42, class_weight='balanced')
 gb = GradientBoostingClassifier(n_estimators=1000, learning_rate=0.01, max_depth=7, random_state=42)
 
-rf = print_and_store_metrics("Random Forest",     rf, X_train_scaled, y_train_bal, X_test_scaled, y_test)
-gb = print_and_store_metrics("Gradient Boosting", gb, X_train_scaled, y_train_bal, X_test_scaled, y_test)
+rf = print_and_store_metrics("Random Forest",     rf, X_train_scaled, y_train, X_test_scaled, y_test)
+gb = print_and_store_metrics("Gradient Boosting", gb, X_train_scaled, y_train, X_test_scaled, y_test)
 
 if HAS_XGB:
     xgb = XGBClassifier(n_estimators=1000, learning_rate=0.01, max_depth=8, colsample_bytree=0.7, random_state=42)
-    xgb = print_and_store_metrics("XGBoost", xgb, X_train_scaled, y_train_bal, X_test_scaled, y_test)
+    xgb = print_and_store_metrics("XGBoost", xgb, X_train_scaled, y_train, X_test_scaled, y_test)
 
 if HAS_CATBOOST:
     cat = CatBoostClassifier(iterations=1000, learning_rate=0.01, depth=8, random_state=42, verbose=False)
-    cat = print_and_store_metrics("CatBoost", cat, X_train_scaled, y_train_bal, X_test_scaled, y_test)
+    cat = print_and_store_metrics("CatBoost", cat, X_train_scaled, y_train, X_test_scaled, y_test)
 
 print("-"*65)
 

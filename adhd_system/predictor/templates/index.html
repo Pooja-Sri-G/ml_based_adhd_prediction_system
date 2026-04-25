@@ -241,7 +241,10 @@
     function validateAllSections() {
       const requiredFields = [
         'full_name', 'age', 'Gender', 'EducationStage',
-        'inattention_q1', 'hyperactivity_q1',
+        'inattention_q1','inattention_q2','inattention_q3','inattention_q4','inattention_q5',
+        'inattention_q6','inattention_q7','inattention_q8','inattention_q9',
+        'hyperactivity_q1','hyperactivity_q2','hyperactivity_q3','hyperactivity_q4','hyperactivity_q5',
+        'hyperactivity_q6','hyperactivity_q7','hyperactivity_q8','hyperactivity_q9',
         'DayDreaming', 'RSD',
         'SleepHours', 'ScreenTime',
         'ComorbidAnxiety', 'ComorbidDepression', 'FamilyHistoryADHD',
@@ -267,26 +270,31 @@
     function calculateScores() {
       try {
         if (!validateAllSections()) return false;
+        
+        const gameCompleted = parseInt(document.getElementById('total_trials').value) > 0;
+        
         const inattEl = document.getElementById('InattentionScore');
-        const existingInatt = parseFloat(inattEl.value) || 0;
-        if (existingInatt === 0) {
+        if (!gameCompleted) {
           let raw = 0;
           for (let i = 1; i <= 9; i++) {
             const val = document.querySelector(`input[name="inattention_q${i}"]:checked`);
-            if (val) raw += parseInt(val.value);
+            raw += val ? (parseInt(val.value) || 0) : 0;
           }
           inattEl.value = (raw * 5 / 18).toFixed(2);
         }
+
+        const timeGameCompleted = document.getElementById('time_game_rounds').value !== '[]';
+        
         const hyperEl = document.getElementById('HyperactivityScore');
-        const existingHyper = parseFloat(hyperEl.value) || 0;
-        if (existingHyper === 0) {
+        if (!timeGameCompleted) {
           let raw = 0;
           for (let i = 1; i <= 9; i++) {
             const val = document.querySelector(`input[name="hyperactivity_q${i}"]:checked`);
-            if (val) raw += parseInt(val.value);
+            raw += val ? (parseInt(val.value) || 0) : 0;
           }
           hyperEl.value = (raw * 5 / 18).toFixed(2);
         }
+
         return true;
       } catch (e) {
         console.error('calculateScores error:', e);
@@ -294,7 +302,6 @@
         return false;
       }
     }
-
     document.addEventListener('DOMContentLoaded', function () {
 
       /* ── Hamburger / sidebar toggle ── */
@@ -823,7 +830,7 @@
                 <button type="button" class="btn btn-outline" onclick="openGame()" style="width: 100%;">Launch Go / No-Go Test</button>
                 <div id="game-completion-status"
                   style="margin-top: 14px; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: 8px; border: 1px solid rgba(34,197,94,0.25); display: none;">
-                  <p style="color: #16a34a; font-weight: 600; margin: 0;">✓ Go/No-Go test completed!</p>
+                  <p style="color: #16a34a; font-weight: 600; margin: 0;">Go/No-Go test completed!</p>
                 </div>
               </div>
 
@@ -846,7 +853,7 @@
                 <button type="button" class="btn btn-outline" onclick="openTimeGame()" style="width: 100%; border-color: #10b981; color: #10b981;">Launch Time Perception Test</button>
                 <div id="time-game-completion-status"
                   style="margin-top: 14px; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: 8px; border: 1px solid rgba(34,197,94,0.25); display: none;">
-                  <p style="color: #16a34a; font-weight: 600; margin: 0;">✓ Time perception test completed!</p>
+                  <p style="color: #16a34a; font-weight: 600; margin: 0;"> Time perception test completed!</p>
                 </div>
               </div>
 
@@ -897,7 +904,6 @@
       else if (age >= 23)              stageSelect.value = "Adult";
     });
 
-    // Go/No-Go game completion message
     window.addEventListener('message', function (event) {
       if (event.data && event.data.gameCompleted) {
         document.getElementById('InattentionScore').value  = event.data.inattentionScore;

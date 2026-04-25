@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from .generate_report import generate_adhd_report
 
-base = os.path.dirname(os.path.abspath(__file__))
+base = os.path.dirname(os.path.abspath (__file__))
 scaler = joblib.load(os.path.join(base, 'scaler.pkl'))
 label_encoders = joblib.load(os.path.join(base, 'labelEncoders.pkl'))
 adhd_model = joblib.load(os.path.join(base, 'adhdModel.pkl'))
@@ -46,7 +46,7 @@ def predict(request):
             'reaction_times': json.loads(request.POST.get('reaction_times', '[]'))
         }
 
-        # time game data for the report
+        # time game data 
         try:
             raw_rounds = json.loads(request.POST.get('time_game_rounds', '[]'))
         except (json.JSONDecodeError, TypeError):
@@ -95,7 +95,7 @@ def predict(request):
         X = scaler.transform([features])
         prediction = int(adhd_model.predict(X)[0])
 
-        # Storing everything in session for report generation
+        # session data 
         request.session['assessment_report_data'] = {
             'user_data': {
                 'Age': user_data_raw['age'],
@@ -116,14 +116,12 @@ def predict(request):
                 'AcademicScore': user_data_raw['AcademicScore'],
             },
             'game_data': game_data,
-            'time_game_data': time_game_data,   # ← NEW
+            'time_game_data': time_game_data,   
             'prediction': prediction,
             'user_name': request.POST.get('full_name', 'User')
         }
 
-        result_text = "There are possible signs of ADHD from your answers." if prediction == 1 else "You might not have ADHD"
-
-        # Save to adhd_predicted.csv 
+        # save to adhd_predicted.csv 
         try:
             project_root = os.path.dirname(os.path.dirname(base))
             predicted_dataset_path = os.path.join(project_root, 'ml', 'adhd_predicted.csv')
@@ -163,15 +161,12 @@ def predict(request):
         except Exception as e:
             print(f"Error saving to adhd_predicted.csv: {e}")
 
-        return render(request, "result.html", {"prediction": prediction, "result": result_text})
+        return render(request, "result.html", {"prediction": prediction})
 
     return render(request, "index.html")
 
 def download_report(request):
     data = request.session.get('assessment_report_data')
-    if not data:
-        return HttpResponse("No assessment data found. Please complete the assessment first.", status=400)
-
     pdf_bytes = generate_adhd_report(
         data['user_data'],
         data['game_data'],

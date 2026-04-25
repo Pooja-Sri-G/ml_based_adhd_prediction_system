@@ -165,7 +165,7 @@ function endGame() {
 
             const parentBtn = window.opener.document.querySelector("button[onclick='openGame()']");
             if (parentBtn) {
-                parentBtn.innerText = "Assessment Complete ✓";
+                parentBtn.innerText = "Assessment Complete";
                 parentBtn.style.color = "#10b981";
                 parentBtn.style.borderColor = "#10b981";
             }

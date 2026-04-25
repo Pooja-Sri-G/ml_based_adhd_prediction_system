@@ -201,7 +201,7 @@ function endGame() {
 
       const timeBtn = window.opener.document.querySelector("button[onclick='openTimeGame()']");
       if (timeBtn) {
-        timeBtn.innerText = 'Time Test Complete ✓';
+        timeBtn.innerText = 'Time Test Complete';
         timeBtn.style.color = '#10b981';
         timeBtn.style.borderColor = '#10b981';
       }

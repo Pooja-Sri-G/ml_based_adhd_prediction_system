@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-njttaspo(mwyl0l32jqq16g6*ql#%mt-a4qr)h@zxp9xq@dg4k
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['ml-based-adhd-prediction-system.loca.lt']
+ALLOWED_HOSTS = ['machine-learning-based-adhd-prediction-system.loca.lt','127.0.0.1']
 
 
 # Application definition
@@ -50,7 +50,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CSRF_TRUSTED_ORIGINS = ['https://ml-based-adhd-prediction-system.loca.lt']
+CSRF_TRUSTED_ORIGINS = ['https://machine-learning-based-adhd-prediction-system.loca.lt', 'http://127.0.0.1']
 ROOT_URLCONF = 'adhd_system.urls'
 
 TEMPLATES = [
